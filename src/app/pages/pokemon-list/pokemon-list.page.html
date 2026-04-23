@@ -1,0 +1,166 @@
+<ion-header>
+  <ion-toolbar color="primary">
+    <ion-title>Pokédex</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="pokedex-content">
+  <div class="pokedex-layout">
+
+    <!-- SIDEBAR -->
+    <div class="sidebar">
+
+      <!-- Búsqueda -->
+      <div class="search-wrap">
+        <ion-searchbar
+          [(ngModel)]="searchQuery"
+          (ionInput)="filterList()"
+          placeholder="Buscar pokémon..."
+          debounce="300"
+          animated>
+        </ion-searchbar>
+      </div>
+
+      <!-- Filtros por tipo -->
+      <div class="type-filters">
+        <ion-chip
+          *ngFor="let type of typeFilters"
+          [class.active-chip]="activeType === type"
+          [style.background]="activeType === type && type !== 'all' ? getTypeColor(type).bg : ''"
+          [style.color]="activeType === type && type !== 'all' ? getTypeColor(type).text : ''"
+          (click)="setType(type)">
+          {{ type === 'all' ? 'Todos' : type }}
+        </ion-chip>
+      </div>
+
+      <!-- Lista de pokémon -->
+      <div class="pokemon-list" *ngIf="!loadingList; else listSkeleton">
+        <div
+          *ngFor="let pokemon of filteredPokemons"
+          class="pokemon-item"
+          [class.selected]="selectedPokemon?.id === pokemon.id"
+          (click)="selectPokemon(pokemon)">
+          <img [src]="getThumb(pokemon.id)" [alt]="pokemon.name" class="poke-thumb" loading="lazy" />
+          <div class="poke-info">
+            <span class="poke-num">#{{ pokemon.id | number:'3.0-0' }}</span>
+            <span class="poke-name">{{ pokemon.name | titlecase }}</span>
+          </div>
+        </div>
+
+        <div class="no-results" *ngIf="filteredPokemons.length === 0">
+          Sin resultados
+        </div>
+      </div>
+
+      <ng-template #listSkeleton>
+        <div class="skeleton-list">
+          <ion-skeleton-text *ngFor="let i of [1,2,3,4,5,6,7,8]" animated style="height:56px; border-radius:8px; margin:4px 12px;"></ion-skeleton-text>
+        </div>
+      </ng-template>
+    </div>
+
+    <!-- DETALLE -->
+    <div class="detail-panel">
+
+      <!-- Loading -->
+      <div class="detail-loading" *ngIf="loadingDetail">
+        <ion-spinner name="crescent" color="primary"></ion-spinner>
+        <p>Cargando...</p>
+      </div>
+
+      <!-- Placeholder -->
+      <div class="detail-placeholder" *ngIf="!loadingDetail && !selectedPokemon">
+        <ion-icon name="radio-button-off-outline" size="large"></ion-icon>
+        <p>Selecciona un pokémon para ver sus detalles</p>
+      </div>
+
+      <!-- Contenido del detalle -->
+      <div class="detail-content" *ngIf="!loadingDetail && selectedPokemon">
+
+        <!-- Hero: imagen + nombre -->
+        <div class="detail-hero">
+          <div class="sprite-wrap">
+            <img [src]="getSprite(selectedPokemon.id)" [alt]="selectedPokemon.name" class="detail-sprite" />
+          </div>
+          <div class="detail-heading">
+            <p class="detail-num">#{{ selectedPokemon.id | number:'3.0-0' }}</p>
+            <h1 class="detail-name">{{ selectedPokemon.name | titlecase }}</h1>
+            <p class="detail-genus">{{ getGenus() }}</p>
+            <div class="detail-types">
+              <ion-badge
+                *ngFor="let t of selectedPokemon.types"
+                [style.background]="getTypeColor(t.type.name).bg"
+                [style.color]="getTypeColor(t.type.name).text">
+                {{ t.type.name }}
+              </ion-badge>
+              <ion-button
+                size="small"
+                fill="outline"
+                [color]="isShiny ? 'warning' : 'medium'"
+                (click)="toggleShiny()">
+                ✦ shiny
+              </ion-button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Descripción -->
+        <div class="section-block">
+          <p class="section-label">Descripción</p>
+          <p class="description-text">{{ getDescription() }}</p>
+        </div>
+
+        <!-- Medidas -->
+        <div class="section-block">
+          <p class="section-label">Medidas</p>
+          <div class="stats-grid">
+            <div class="stat-card">
+              <p class="stat-card-label">Altura</p>
+              <p class="stat-card-value">{{ (selectedPokemon.height / 10).toFixed(1) }} m</p>
+            </div>
+            <div class="stat-card">
+              <p class="stat-card-label">Peso</p>
+              <p class="stat-card-value">{{ (selectedPokemon.weight / 10).toFixed(1) }} kg</p>
+            </div>
+            <div class="stat-card">
+              <p class="stat-card-label">Exp. base</p>
+              <p class="stat-card-value">{{ selectedPokemon.base_experience ?? '—' }}</p>
+            </div>
+            <div class="stat-card abilities-card">
+              <p class="stat-card-label">Habilidades</p>
+              <div class="abilities-wrap">
+                <ion-chip
+                  *ngFor="let a of selectedPokemon.abilities"
+                  class="ability-chip"
+                  outline>
+                  {{ a.ability.name | titlecase }}
+                  <span *ngIf="a.is_hidden" class="hidden-badge">oculta</span>
+                </ion-chip>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Estadísticas base -->
+        <div class="section-block">
+          <p class="section-label">Estadísticas base</p>
+          <div class="stat-bars">
+            <div class="stat-row" *ngFor="let stat of selectedPokemon.stats; let i = index">
+              <span class="stat-name">{{ formatStatName(stat.stat.name) }}</span>
+              <div class="stat-bar-wrap">
+                <div
+                  class="stat-bar"
+                  [style.width]="statBarWidth(stat.base_stat)"
+                  [style.background]="getStatColor(i)">
+                </div>
+              </div>
+              <span class="stat-num">{{ stat.base_stat }}</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+</ion-content>
