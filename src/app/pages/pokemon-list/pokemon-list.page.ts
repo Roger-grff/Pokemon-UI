@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { PokemonService } from 'src/app/services/pokemon.service';
 
+<<<<<<< HEAD
 export interface PokemonListItem {
   name: string;
   id: number;
@@ -29,12 +30,15 @@ export const TYPE_COLORS: Record<string, { bg: string; text: string; bar: string
 
 export const STAT_COLORS = ['#D85A30','#378ADD','#639922','#7F77DD','#D4537E','#EF9F27'];
 
+=======
+>>>>>>> 19981df8b8bd1ec83d4dbe3813cf64336a315c6c
 @Component({
   selector: 'app-pokemon-list',
   templateUrl: './pokemon-list.page.html',
   styleUrls: ['./pokemon-list.page.scss'],
 })
 export class PokemonListPage implements OnInit {
+<<<<<<< HEAD
   allPokemons: PokemonListItem[] = [];
   filteredPokemons: PokemonListItem[] = [];
 
@@ -51,10 +55,15 @@ export class PokemonListPage implements OnInit {
   readonly typeColors = TYPE_COLORS;
   readonly statColors = STAT_COLORS;
   readonly maxStat = 255;
+=======
+  pokemons: any[] = [];
+  loading = false;
+>>>>>>> 19981df8b8bd1ec83d4dbe3813cf64336a315c6c
 
   constructor(private pokemonService: PokemonService) {}
 
   ngOnInit() {
+<<<<<<< HEAD
     this.loadList();
   }
 
@@ -151,3 +160,23 @@ export class PokemonListPage implements OnInit {
     return pokemon?.id ?? 0;
   }
 }
+=======
+    this.fetchPokemons();
+    
+  }
+
+  fetchPokemons() {
+    this.loading = true;
+    this.pokemonService.getPokemons(50).subscribe({
+      next: (response) => {
+        this.pokemons = response.results;
+        this.loading = false;
+      },
+      error: (error) => {
+        console.error('Error fetching Pokémon:', error);
+        this.loading = false;
+      },
+    });
+  }
+}
+>>>>>>> 19981df8b8bd1ec83d4dbe3813cf64336a315c6c
